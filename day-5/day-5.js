@@ -31,6 +31,26 @@ function getSeeds() {
   return seedsAsNumbers;
 }
 
+function getSeedsRanges() {
+  const startingIndex = file.indexOf("seeds");
+  const finalIndex = file.indexOf(`seed-to-soil`) - 2;
+  const [, seeds] = file.substring(startingIndex, finalIndex).split(": ");
+  const seedsAsNumbers = seeds.split(/\D+/).map((seed) => Number(seed));
+  return seedsAsNumbers.reduce((accumulator, currentElement, index) => {
+    if (index % 2 === 0) {
+      const nextElement =
+        index + 1 < seedsAsNumbers.length
+          ? seedsAsNumbers[index + 1]
+          : undefined;
+      accumulator.push({
+        from: currentElement,
+        to: currentElement + nextElement - 1,
+      });
+    }
+    return accumulator;
+  }, []);
+}
+
 function getMapNames() {
   const results = file.matchAll(/(.*map)/g);
   let mapNames = [];
@@ -73,10 +93,7 @@ function parseMap(valueLine = "") {
   };
 }
 
-function part1() {
-  const seeds = getSeeds();
-  const maps = getMaps();
-
+function getLowestSeedLocation(seeds = [], maps = {}) {
   const mappedSeeds = seeds.map((seed) => {
     let result = seed;
     Object.keys(maps).forEach((mapKey) => {
@@ -95,4 +112,47 @@ function part1() {
   }, mappedSeeds[0].result);
   return lowestLocation;
 }
-console.log("part1", part1());
+
+function part1() {
+  const seeds = getSeeds();
+  const maps = getMaps();
+  return getLowestSeedLocation(seeds, maps);
+}
+
+function getLowestLocationFromSeedRange(
+  seedRange = { from: 0, to: 0 },
+  maps = []
+) {
+  let mappedSeeds = [];
+  for (let index = seedRange.from; index <= seedRange.to; index++) {
+    let result = index;
+    Object.keys(maps).forEach((mapKey) => {
+      const currentMap = maps[mapKey];
+      result = convertNumber(result, currentMap);
+    });
+    mappedSeeds.push({ ...seedRange, seed: index, result });
+  }
+
+  const lowestLocation = mappedSeeds.reduce((accumulator, currentSeed) => {
+    accumulator =
+      currentSeed.result < accumulator ? currentSeed.result : accumulator;
+    return accumulator;
+  }, mappedSeeds[0].result);
+
+  return lowestLocation;
+}
+
+function part2() {
+  const seedsRanges = getSeedsRanges();
+  const maps = getMaps();
+
+  const lowest = seedsRanges.reduce((accumulator, currentRange) => {
+    const rangeLowest = getLowestLocationFromSeedRange(currentRange, maps);
+    accumulator = rangeLowest < accumulator ? rangeLowest : accumulator;
+    return accumulator;
+  }, Number.POSITIVE_INFINITY);
+
+  return lowest;
+}
+// console.log("part1", part1());
+console.log("part2", part2());

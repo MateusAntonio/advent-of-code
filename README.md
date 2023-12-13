@@ -1,5 +1,11 @@
-Run `cd day-<number>`
+### Install the dependencies (typescript and tsx)
 
-then
+`yarn install`
 
-Run `node day-<number>.js`
+### Then, navigate to the specific day folder
+
+`cd day-<number>`
+
+### Finally, run the script
+
+`npx tsx day-<number>.ts`
